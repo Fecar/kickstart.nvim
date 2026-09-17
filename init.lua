@@ -107,7 +107,7 @@ do
   --  For more options, you can see `:help option-list`
 
   -- Make line numbers default
-  -- vim.o.number = true
+  vim.o.number = true
   -- You can also add relative line numbers, to help with jumping.
   --  Experiment for yourself to see if you like it!
   vim.o.relativenumber = true
@@ -236,6 +236,8 @@ do
 
   vim.keymap.set('n', '<s-l>', ':bn<CR>', { desc = 'Move to the next Buffer' })
   vim.keymap.set('n', '<s-h>', ':bp<CR>', { desc = 'Move to the previus Buffer' })
+
+  vim.keymap.set('n', '<leader>x', ':bd<CR>', { desc = 'Close current buffer' })
 
   -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
   -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
@@ -401,6 +403,7 @@ do
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
   require('todo-comments').setup { signs = false }
+  vim.keymap.set('n', '<leader>st', '<cmd>TodoTelescope<CR>', { desc = '[S]earch [T]odos' })
 
   -- [[ mini.nvim ]]
   --  A collection of various small independent plugins/modules
@@ -447,6 +450,11 @@ do
   -- cursor location to LINE:COLUMN
   ---@diagnostic disable-next-line: duplicate-set-field
   statusline.section_location = function() return '%2l:%-2v' end
+
+  local ori_section_mode = statusline.section_mode
+
+  ---@diagnostic disable-next-line: duplicate-set-field
+  statusline.section_mode = function() return ori_section_mode { trunc_width = 99999 } end
 
   -- ... and there is more!
   --  Check out: https://github.com/nvim-mini/mini.nvim
@@ -696,9 +704,9 @@ do
   ---@type table<string, vim.lsp.Config>
   local servers = {
     clangd = {},
-    -- gopls = {},
+    gopls = {},
     pyright = {},
-    -- rust_analyzer = {},
+    rust_analyzer = {},
     --
     -- Some languages (like typescript) have entire language plugins that can be useful:
     --    https://github.com/pmizio/typescript-tools.nvim
@@ -799,12 +807,14 @@ do
     },
     -- You can also specify external formatters in here.
     formatters_by_ft = {
-      -- rust = { 'rustfmt' },
+      rust = { 'rustfmt' },
+      go = { 'goimports', 'gofmt' },
       -- Conform can also run multiple formatters sequentially
-      -- python = { "isort", "black" },
-      --
+      python = { 'autopep8', 'black' },
+
+      cpp = { 'clang-format' },
       -- You can use 'stop_after_first' to run the first available formatter from the list
-      -- javascript = { "prettierd", "prettier", stop_after_first = true },
+      javascript = { 'prettierd', 'prettier', stop_after_first = true },
     },
   }
 
@@ -855,7 +865,12 @@ do
       -- <c-k>: Toggle signature help
       --
       -- See `:help blink-cmp-config-keymap` for defining your own keymap
-      preset = 'default',
+      -- preset = 'default',
+      preset = 'enter',
+
+      ['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
+
+      ['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
 
       -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
       --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
@@ -886,7 +901,8 @@ do
     -- the rust implementation via `'prefer_rust_with_warning'`
     --
     -- See `:help blink-cmp-config-fuzzy` for more information
-    fuzzy = { implementation = 'lua' },
+    fuzzy = { implementation = 'prefer_rust_with_warning' },
+    -- fuzzy = { implementation = 'lua' },
 
     -- Shows a signature help window while you type arguments for a function
     signature = { enabled = true },
@@ -969,13 +985,14 @@ do
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug'
-  -- require 'kickstart.plugins.indent_line'
-  -- require 'kickstart.plugins.lint'
-  -- require 'kickstart.plugins.autopairs'
-  -- require 'kickstart.plugins.neo-tree'
-  -- require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
+  require 'kickstart.plugins.debug'
+  require 'kickstart.plugins.indent_line'
+  require 'kickstart.plugins.lint'
+  require 'kickstart.plugins.autopairs'
+  require 'kickstart.plugins.neo-tree'
+  require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
 
+  require 'kickstart.plugins.oil'
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
