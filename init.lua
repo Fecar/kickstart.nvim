@@ -237,8 +237,6 @@ do
   vim.keymap.set('n', '<s-l>', ':bn<CR>', { desc = 'Move to the next Buffer' })
   vim.keymap.set('n', '<s-h>', ':bp<CR>', { desc = 'Move to the previus Buffer' })
 
-  vim.keymap.set('n', '<leader>x', ':bd<CR>', { desc = 'Close current buffer' })
-
   -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
   -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
   -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
@@ -409,6 +407,9 @@ do
   --  A collection of various small independent plugins/modules
   vim.pack.add { gh 'nvim-mini/mini.nvim' }
 
+  vim.pack.add { gh 'MeanderingProgrammer/render-markdown.nvim' }
+  require('render-markdown').setup {}
+
   -- If a nerd font is available, load the icons module for pretty icons in various plugins.
   if vim.g.have_nerd_font then
     require('mini.icons').setup()
@@ -438,12 +439,27 @@ do
   -- - sr)'  - [S]urround [R]eplace [)] [']
   require('mini.surround').setup()
 
+  vim.pack.add { gh 'famiu/bufdelete.nvim' }
+
+  vim.keymap.set('n', '<leader>c', ':Bdelete<CR>', { desc = '[C]lose current buffer' })
+
   -- Simple and easy statusline.
   --  You could remove this setup call if you don't like it,
   --  and try some other statusline plugin
   local statusline = require 'mini.statusline'
   -- Set `use_icons` to true if you have a Nerd Font
   statusline.setup { use_icons = vim.g.have_nerd_font }
+
+  -- require('mini.tabline').setup({ show_icons = vim.g.have_nerd_font })
+  vim.pack.add { gh 'akinsho/bufferline.nvim' }
+  require('bufferline').setup {
+    options = {
+      close_command = 'Bdelete! %d',
+      right_mouse_command = 'Bdelete! %d',
+      show_buffer_icons = vim.g.have_nerd_font,
+      offsets = { { filetype = 'neo-tree', text = 'Explorer', separator = true } },
+    },
+  }
 
   -- You can configure sections in the statusline by overriding their
   -- default behavior. For example, here we set the section for
@@ -698,6 +714,12 @@ do
     end,
   })
 
+  local vue_plugin = {
+    name = '@vue/typescript-plugin',
+    location = vim.fn.stdpath 'data' .. '/mason/packages/vue-language-server/node_modules/@vue/language-server',
+    languages = { 'vue' },
+    configNamespace = 'typescript',
+  }
   -- Enable the following language servers
   --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
   --  See `:help lsp-config` for information about keys and how to configure
@@ -705,14 +727,28 @@ do
   local servers = {
     clangd = {},
     gopls = {},
-    pyright = {},
+    pyright = {
+      settings = {
+        pyright = { disableOrganizeImports = true },
+      },
+    },
+    ruff = {
+      on_init = function(client) client.server_capabilities.hoverProvider = false end,
+    },
     rust_analyzer = {},
     --
     -- Some languages (like typescript) have entire language plugins that can be useful:
     --    https://github.com/pmizio/typescript-tools.nvim
     --
     -- But for many setups, the LSP (`ts_ls`) will work just fine
-    ts_ls = {},
+    ts_ls = {
+      init_options = {
+        plugins = { vue_plugin },
+      },
+      filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+    },
+
+    vue_ls = {},
 
     stylua = {}, -- Used to format Lua code
 
@@ -771,6 +807,7 @@ do
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
+    'prettier',
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -810,11 +847,17 @@ do
       rust = { 'rustfmt' },
       go = { 'goimports', 'gofmt' },
       -- Conform can also run multiple formatters sequentially
-      python = { 'autopep8', 'black' },
+      -- python = { 'autopep8', 'black' },
+      python = { 'ruff_organize_imports', 'ruff_fix', 'ruff_format' },
 
       cpp = { 'clang-format' },
       -- You can use 'stop_after_first' to run the first available formatter from the list
       javascript = { 'prettierd', 'prettier', stop_after_first = true },
+      typescript = { 'prettierd', 'prettier', stop_after_first = true },
+      vue = { 'prettierd', 'prettier', stop_after_first = true },
+
+      markdown = { 'markdownlint' },
+      dockerfile = { 'dockerfmt' },
     },
   }
 
@@ -923,7 +966,9 @@ do
   vim.pack.add { { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' } }
 
   -- Ensure basic parsers are installed
-  local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+  local parsers =
+    { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'vue', 'typescript', 'javascript', 'css' }
+  -- local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
   require('nvim-treesitter').install(parsers)
 
   ---@param buf integer
