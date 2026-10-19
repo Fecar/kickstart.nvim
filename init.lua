@@ -231,8 +231,11 @@ do
   --  See `:help wincmd` for a list of all window commands
   vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
   vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-  vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-  vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+  vim.keymap.set({'n', 't'}, '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+  vim.keymap.set({'n', 't'}, '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+  vim.keymap.set({'n','i'}, '<C-s>', '<Cmd>w<CR>', { desc = 'Save buffer' })
+  vim.keymap.set('n', '<leader>wa', '<Cmd>wa<CR>', { desc = '[W]rite all [B]uffers' })
 
   vim.keymap.set('n', '<s-l>', ':bn<CR>', { desc = 'Move to the next Buffer' })
   vim.keymap.set('n', '<s-h>', ':bp<CR>', { desc = 'Move to the previus Buffer' })
@@ -408,7 +411,9 @@ do
   vim.pack.add { gh 'nvim-mini/mini.nvim' }
 
   vim.pack.add { gh 'MeanderingProgrammer/render-markdown.nvim' }
-  require('render-markdown').setup {}
+  require('render-markdown').setup {
+    completions = { lsp = { enabled = true } },
+  }
 
   -- If a nerd font is available, load the icons module for pretty icons in various plugins.
   if vim.g.have_nerd_font then
@@ -1041,7 +1046,7 @@ do
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- require 'custom.plugins'
+  require 'custom.plugins.toggleterm'
 end
 
 -- The line beneath this is called `modeline`. See `:help modeline`
